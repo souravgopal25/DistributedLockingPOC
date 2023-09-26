@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @AllArgsConstructor
 public class StudentController {
@@ -27,6 +29,28 @@ public class StudentController {
     public ResponseEntity<?> createStudent(@RequestBody Student student) {
         try {
             return ResponseEntity.ok(studentService.createStudent(student));
+
+        } catch (Exception e) {
+
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/student/{id}/add-money/{amount}")
+    public ResponseEntity<?> addMoney(@PathVariable Long id, @PathVariable BigDecimal amount) {
+        try {
+            return ResponseEntity.ok(studentService.addMoney(id, amount, false));
+
+        } catch (Exception e) {
+
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/student/{id}/add-money-sleep/{amount}")
+    public ResponseEntity<?> addMoneySleep(@PathVariable Long id, @PathVariable BigDecimal amount) {
+        try {
+            return ResponseEntity.ok(studentService.addMoney(id, amount, true));
 
         } catch (Exception e) {
 

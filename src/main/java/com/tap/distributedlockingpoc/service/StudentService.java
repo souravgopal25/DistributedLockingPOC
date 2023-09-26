@@ -2,11 +2,21 @@ package com.tap.distributedlockingpoc.service;
 
 import com.tap.distributedlockingpoc.model.Student;
 import com.tap.distributedlockingpoc.repository.StudentRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.Optional;
+import java.util.Random;
 
+import static java.lang.Thread.sleep;
+
+@Slf4j
 @Service
 @AllArgsConstructor
 public class StudentService {
@@ -32,5 +42,23 @@ public class StudentService {
 
     public Student getStudentById(Long id) {
         return studentRepository.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
+    }
+
+
+    @Retryable(value = {SQLException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Transactional
+    public Student addMoney(Long userId, BigDecimal amountToAdd, Boolean sleep) throws InterruptedException {
+        try {
+            Student student = studentRepository.findById(userId).orElseThrow(() -> new RuntimeException("Student not found"));
+            if (sleep) {
+                log.info("Sleeping for 20 seconds");
+                sleep(15000);
+            }
+            student.setWalletBalance(student.getWalletBalance().add(amountToAdd));
+            return studentRepository.save(student);
+        } catch (Exception e) {
+            log.error("Error while adding money to student wallet", e);
+            throw e;
+        }
     }
 }
